@@ -67,7 +67,7 @@ debug("Launching Impftermin");
           content: `new Audio("data:audio/wav;base64,${SOUND_BASE64}").play();`,
         });
         
-		await bookAppointment(
+		if (await bookAppointment(
 		page, 
 		entry.title!, 
 		entry.firstname!, 
@@ -78,16 +78,18 @@ debug("Launching Impftermin");
 		entry.streetnumber!,
 		entry.mobile!,
 		entry.email!
-		)
-		//play roadrunner sound
+		)){
 		
+		//play roadrunner sound
 		await page.addScriptTag({
-          content: `new Audio("data:audio/wav;base64,${SOUND_RoadRunner_BASE64}").play();`,
+        content: `new Audio("data:audio/wav;base64,${SOUND_RoadRunner_BASE64}").play();`,
         });
+		} else {
+		}
 		
 		// stop scraper for 25 minutes after a hit
-		// stop not needed anymore, since personal details have been filled in automatically, direct proceed with queue
-        setTimeout(() => runChecks(), 1000 * 60 * 25);
+		// stop not needed anymore, since personal details have been filled in automatically. Directly proceed with queue
+        // setTimeout(() => runChecks(), 1000 * 60 * 25);
 		
         return;
       }

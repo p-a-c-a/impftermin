@@ -218,21 +218,73 @@ email: string
   // Check that all personal data is available
   if (!title || !firstname || !lastname || !zip || !city || !street || !streetnumber || !mobile || !email) {
 	  debug("Personal details incomplete, cannot book appointment");
-	  return
+	  return false;
   } 
   
-  // select first available appointment 
+ 
+  var appointmentDates = new Array();
+  var dateNumber : number = 0;
+  var linearDate : number = 0;
+  const desiredEarliestDate : string = "07.06."; // do not book appointment earlier than this date (to book earliest available set to 01.01.)
+  const desiredEarliestLinearDate : number = parseInt(desiredEarliestDate.substring(0,2)) + parseInt(desiredEarliestDate.substring(3,5))*31;
+  var desiredEarliestDateFound : boolean = false;
+  
+  debug(" ");
+  debug("Desired earliest Date %s", desiredEarliestDate);
+  debug("Desired earliest linear Date %s", desiredEarliestLinearDate);
+  debug(" ");
+  
+  // Get all appointments into array and identify earliest desired date 
   for (const listElementTermin of await page.$$("span")) {
-    const idName = await (
+	const idName = await (
       await listElementTermin.getProperty("innerText")
     )?.jsonValue<string>();
-    if (idName && idName.includes("Uhr")) {
-	  await listElementTermin.click({ delay: 200 });
-      break;
+	
+	// Marker ".," used to find first substring of every date offered
+    if (idName && idName.includes(".,") ) {
+	  dateNumber++;
+	  appointmentDates[dateNumber]=idName;
+	  if ( (dateNumber % 2) !== 0 ){
+			// every second date is second pair of the two necessary vaccinations
+			debug("  ");
+			debug("Vac date pair #%s", ((dateNumber - (dateNumber % 2))/2+1 )); 
+			// calculate linear date from day and month (year ignored)
+			linearDate = parseInt(idName.substring(5,7)) + parseInt(idName.substring(8,10))*31;
+			debug("Linear date: %s", linearDate);
+			if (linearDate>=desiredEarliestLinearDate){				
+				if (!desiredEarliestDateFound){
+					debug("This is the earliest desired Date: %s", idName);
+					// Select desired date by clicking
+					await listElementTermin.click({ delay: 200 });
+					desiredEarliestDateFound = true;
+				}
+			}
+	  }	  
     }
+	// Marker "Uhr" used to find second substring of every date offered
+	if (idName && idName.includes("Uhr") ) {
+		appointmentDates[dateNumber]=appointmentDates[dateNumber].concat(idName);
+		debug("Teiltermin: %s", appointmentDates[dateNumber]);		
+	}
+  }
+  if (!desiredEarliestDateFound){
+	  debug("Desired earliest date for first shot not available yet");
+	  debug("Latest available date for first shot is %s", appointmentDates[dateNumber-1]);
+	
+	// Click Abbrechen button to finish and proceed
+    for (const listElementTermin of await page.$$("button")) {
+	  const idName = await (
+		await listElementTermin.getProperty("innerText")
+	  )?.jsonValue<string>();
+      if (idName && idName.includes("ABBRECHEN")) {
+       await listElementTermin.click({ delay: 200 });	  
+       break;
+      }
+    }
+  return false;
   }
  
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(1000);
 
   // submit request for selected offer
   for (const listElementTermin of await page.$$("button")) {
@@ -252,7 +304,7 @@ email: string
 
   // now fill private data
 
-  // Press Herr, Frau, Divers, Kind
+  // Click Herr, Frau, Divers, Kind
   for (const listElementAnrede of await page.$$("span")) {
     const idName = await (
       await listElementAnrede.getProperty("innerText")
@@ -302,7 +354,7 @@ email: string
 
   // Final confirmation, BINDING booking!!!
   const bookingButton = await page.$("button.search-filter-button");
-  //await bookingButton?.click({ delay: 500 });
+  // await bookingButton?.click({ delay: 500 });
   
   debug(" ");
   debug("===========================================");
@@ -313,8 +365,6 @@ email: string
   debug(" ");
 		
   // Show booked appointment date in debug log
-  // div its-search-step-content enthält gewählten termin
-  
   let i=0;
   for (const listElementBookedTermin of await page.$$("span")) {	  
     const idName = await (
@@ -325,7 +375,7 @@ email: string
 		if (i>2) {
 			break;
 		} else {
-			debug("Impfung Nummer %s",i);
+			debug("%s. vaccination",i);
 			debug("Selected Appointment: %s",idName);
 		}		
     }
