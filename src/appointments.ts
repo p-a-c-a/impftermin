@@ -98,8 +98,11 @@ async function proceedWithACode(page: Page, impfCode: string) {
   // search appointment
   const searchButton = await page.$("button.search-filter-button");
   await searchButton?.click({ delay: 500 });
-  await page.waitForTimeout(20000);
-
+  
+  // with new appointment available detection logic 20 seconds wait time seems unnecessary 
+  // await page.waitForTimeout(20000);
+  await page.waitForTimeout(5000);
+  
   // info page
   const appointmentWarning = await page.$(
     "span.its-slot-pair-search-no-results"
@@ -198,4 +201,129 @@ export async function checkForAppointments(
   } else {
     return await proceedWithoutACode(page);
   }
+}
+
+export async function bookAppointment(
+page: Page, 
+title: string,
+firstname: string, 
+lastname: string, 
+zip: string, 
+city: string, 
+street: string, 
+streetnumber: string,
+mobile: string,
+email: string
+){
+			  
+  // select first available appointment 
+  for (const listElementTermin of await page.$$("span")) {
+    const idName = await (
+      await listElementTermin.getProperty("innerText")
+    )?.jsonValue<string>();
+    if (idName && idName.includes("Uhr")) {
+	  await listElementTermin.click({ delay: 200 });
+      break;
+    }
+  }
+ 
+  await page.waitForTimeout(500);
+
+  // submit request for selected offer
+  for (const listElementTermin of await page.$$("button")) {
+    const idName = await (
+      await listElementTermin.getProperty("innerText")
+    )?.jsonValue<string>();
+    if (idName && idName.includes("AUSWÄHLEN")) {
+      await listElementTermin.click({ delay: 200 });	  
+      break;
+    }
+  }
+
+
+  // first press button to proceed
+  const filldataButton = await page.$("button.search-filter-button");
+  await filldataButton?.click({ delay: 500 });
+
+  // now fill private data
+
+  // Press Herr, Frau, Divers, Kind
+  for (const listElementAnrede of await page.$$("span")) {
+    const idName = await (
+      await listElementAnrede.getProperty("innerText")
+    )?.jsonValue<string>();
+    if (idName && idName.includes(title)) {
+      await listElementAnrede.click({ delay: 200 });
+      break;
+    }
+  }
+
+  // Firstname
+  await page.type("input[name='firstname']", firstname );
+
+  // Lastname
+  await page.type("input[name='lastname']", lastname);
+ 
+  // ZIP Code
+  await page.type("input[name='plz']", zip);
+
+  // City
+  await page.type("input[name='city']", city);
+ 
+  // Street
+  await page.type("input[name='street']", street);
+ 
+  // Streetnumber (not obligatory)
+  await page.type("input[formcontrolname='housenumber']", streetnumber);
+
+  // Phone
+  await page.type("input[name='phone']", mobile);
+ 
+  // Email
+  await page.type("input[name='notificationReceiver']", email);
+
+  await page.waitForTimeout(1000);
+  
+  // Save entered data and proceed
+  for (const listElementTermin of await page.$$("button")) {
+    const idName = await (
+      await listElementTermin.getProperty("innerText")
+    )?.jsonValue<string>();
+    if (idName && idName.includes("ÜBERNEHMEN")) {
+      await listElementTermin.click({ delay: 200 });
+      break;
+    }
+  } 
+
+  // Final confirmation, BINDING booking!!!
+  const bookingButton = await page.$("button.search-filter-button");
+  //await bookingButton?.click({ delay: 500 });
+  
+  debug(" ");
+  debug("===========================================");
+  debug("===========================================");
+  debug("===== Appointment has been booked :-P =====");
+  debug("===========================================");
+  debug("===========================================");
+  debug(" ");
+		
+  // Show booked appointment date in debug log
+  // div its-search-step-content enthält gewählten termin
+  
+  let i=0;
+  for (const listElementBookedTermin of await page.$$("span")) {	  
+    const idName = await (
+      await listElementBookedTermin.getProperty("innerText")
+    )?.jsonValue<string>();
+    if (idName && idName.includes("Uhr")) {
+		i++;
+		if (i>2) {
+			break;
+		} else {
+			debug("Impfung Nummer %s",i);
+			debug("Selected Appointment: %s",idName);
+		}		
+    }
+  }
+  return true;
 }

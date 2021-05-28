@@ -5,6 +5,7 @@ import { loadConfiguration } from "./configuration";
 import { SOUND_BASE64 } from "./sound.base64";
 import { sendTelegramMessage } from "./telegram";
 import { checkForUrlWithCode } from "./zentrum";
+import {bookAppointment } from "./appointments";
 import { tmpdir } from "os";
 import * as path from "path";
 const debug = Debug("impftermin:main");
@@ -64,8 +65,24 @@ debug("Launching Impftermin");
         await page.addScriptTag({
           content: `new Audio("data:audio/wav;base64,${SOUND_BASE64}").play();`,
         });
-        // stop scraper for 25 minutes after a hit
+        
+		await bookAppointment(
+		page, 
+		entry.title!, 
+		entry.firstname!, 
+		entry.lastname!, 
+		entry.zip!, 
+		entry.city!, 
+		entry.street!, 
+		entry.streetnumber!,
+		entry.mobile!,
+		entry.email!
+		)
+		//play roadrunner sound
+		// stop scraper for 25 minutes after a hit
+		// stop not needed anymore, since personal details have been filled in automatically, direct proceed with queue
         setTimeout(() => runChecks(), 1000 * 60 * 25);
+		
         return;
       }
     }

@@ -20,6 +20,15 @@ export interface Config {
   queue: {
     url: string;
     code?: string;
+	title?: string;
+	firstname?: string;
+    lastname?: string;
+	zip?: string;
+	city?: string;
+	street?: string;
+	streetnumber?: string;
+	mobile?: string;
+	email?: string;
   }[];
 }
 
@@ -38,7 +47,16 @@ const Config = object({
   queue: array(
     object({
       url: Url,
-      code: optional(string()),
+	  code: optional(string()),
+	  title: optional(string()),
+	  firstname: optional(string()),
+	  lastname: optional(string()),
+	  zip: optional(string()),
+	  city: optional(string()),
+	  street: optional(string()),
+	  streetnumber: optional(string()),
+	  mobile: optional(string()),
+	  email: optional(string()),
     })
   ),
 });
