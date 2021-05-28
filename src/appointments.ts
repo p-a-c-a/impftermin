@@ -215,7 +215,12 @@ streetnumber: string,
 mobile: string,
 email: string
 ){
-			  
+  // Check that all personal data is available
+  if (!title || !firstname || !lastname || !zip || !city || !street || !streetnumber || !mobile || !email) {
+	  debug("Personal details incomplete, cannot book appointment");
+	  return
+  } 
+  
   // select first available appointment 
   for (const listElementTermin of await page.$$("span")) {
     const idName = await (

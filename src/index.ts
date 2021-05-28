@@ -3,6 +3,7 @@ Debug.enable("impftermin:*");
 import puppeteer from "puppeteer-core";
 import { loadConfiguration } from "./configuration";
 import { SOUND_BASE64 } from "./sound.base64";
+import { SOUND_RoadRunner_BASE64 } from "./soundRoadRunner.base64";
 import { sendTelegramMessage } from "./telegram";
 import { checkForUrlWithCode } from "./zentrum";
 import {bookAppointment } from "./appointments";
@@ -79,6 +80,11 @@ debug("Launching Impftermin");
 		entry.email!
 		)
 		//play roadrunner sound
+		
+		await page.addScriptTag({
+          content: `new Audio("data:audio/wav;base64,${SOUND_RoadRunner_BASE64}").play();`,
+        });
+		
 		// stop scraper for 25 minutes after a hit
 		// stop not needed anymore, since personal details have been filled in automatically, direct proceed with queue
         setTimeout(() => runChecks(), 1000 * 60 * 25);
