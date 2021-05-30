@@ -225,13 +225,19 @@ email: string
   var appointmentDates = new Array();
   var dateNumber : number = 0;
   var linearDate : number = 0;
-  const desiredEarliestDate : string = "07.06."; // do not book appointment earlier than this date (to book earliest available set to 01.01.)
+  const desiredEarliestDate : string = "02.06."; // do not book appointment earlier than this date (to book any earliest available set to 01.01.)
   const desiredEarliestLinearDate : number = parseInt(desiredEarliestDate.substring(0,2)) + parseInt(desiredEarliestDate.substring(3,5))*31;
+  
+  const desiredLatestDate: string = "03.06."; // do not book appointment later than this date (to book any available set to 31.12.)
+  const desiredLatestLinearDate : number = parseInt(desiredLatestDate.substring(0,2)) + parseInt(desiredLatestDate.substring(3,5))*31;
   var desiredEarliestDateFound : boolean = false;
   
   debug(" ");
   debug("Desired earliest Date %s", desiredEarliestDate);
   debug("Desired earliest linear Date %s", desiredEarliestLinearDate);
+  debug("Desired latest Date %s", desiredLatestDate);
+  debug("Desired latest linear Date %s", desiredLatestLinearDate);
+  
   debug(" ");
   
   // Get all appointments into array and identify earliest desired date 
@@ -251,7 +257,7 @@ email: string
 			// calculate linear date from day and month (year ignored)
 			linearDate = parseInt(idName.substring(5,7)) + parseInt(idName.substring(8,10))*31;
 			debug("Linear date: %s", linearDate);
-			if (linearDate>=desiredEarliestLinearDate){				
+			if ((linearDate>=desiredEarliestLinearDate) && (linearDate<=desiredLatestLinearDate)){				
 				if (!desiredEarliestDateFound){
 					debug("This is the earliest desired Date: %s", idName);
 					// Select desired date by clicking
